@@ -5,12 +5,19 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from recipes.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
-    ShoppingCart, Tag, UserSubscription
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    RecipeTag,
+    ShoppingCart,
+    Tag,
+    UserSubscription
 )
 
 ERROR_MESSAGES = {
@@ -39,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())],
     )
     username = serializers.RegexField(
-        regex='^[\w.@+-]+$',
+        regex=r'^[\w.@+-]+$',
         max_length=150,
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())],
@@ -73,14 +80,18 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data.get('password'))
+        validated_data['password'] = make_password(
+            validated_data.get('password')
+        )
         return super().create(validated_data)
 
     def get_is_subscribed(self, obj):
         current_user = self.context['request'].user
         if not current_user.is_authenticated:
             return False
-        if UserSubscription.objects.filter(user=current_user, subscription=obj).exists():
+        if UserSubscription.objects.filter(
+            user=current_user, subscription=obj
+        ).exists():
             return True
         return False
 
@@ -168,9 +179,11 @@ class SubscriptionWriteSerializer(serializers.Serializer):
             user=validated_data['user'],
             subscription=validated_data['subscription']
         )
-    
+
     def to_representation(self, data):
-        return SubscriptionReadSerializer(context=self.context).to_representation(data)
+        return SubscriptionReadSerializer(
+            context=self.context
+        ).to_representation(data)
 
 
 class UserCollectionReadSerializer(serializers.ModelSerializer):
@@ -292,6 +305,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
             'amount',
         )
 
+
 class RecipeIngredientReadSerializer(RecipeIngredientSerializer):
 
     id = serializers.PrimaryKeyRelatedField(
@@ -346,12 +360,16 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeReadSerializer(RecipeSerializer):
     author = UserSerializer(read_only=True)
     tags = RecipeTagSerializer(source='recipe_tags', many=True)
-    ingredients = RecipeIngredientReadSerializer(source='recipe_ingredients', many=True)
+    ingredients = RecipeIngredientReadSerializer(
+        source='recipe_ingredients', many=True
+    )
 
 
 class RecipeWriteSerializer(RecipeSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True
+    )
     ingredients = RecipeIngredientWriteSerializer(many=True)
 
     def validate_tags(self, value):
@@ -410,9 +428,11 @@ class RecipeWriteSerializer(RecipeSerializer):
 
     def update(self, instance, validated_data):
         return self.create_or_update(validated_data, instance)
-    
+
     def to_representation(self, data):
-        return RecipeReadSerializer(context=self.context).to_representation(data)
+        return RecipeReadSerializer(
+            context=self.context
+        ).to_representation(data)
 
 
 class RecipeSubscriptionSerializer(serializers.ModelSerializer):

@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
         rows = 0
         successful = 0
-        self.stdout.write(f"Importing data for Ingredient model...")
+        self.stdout.write("Importing data for Ingredient model...")
 
         with open(path, encoding="utf-8", mode="r") as file:
             csv_read = csv.reader(file, delimiter=',')

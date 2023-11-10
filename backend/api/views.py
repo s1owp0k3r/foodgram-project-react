@@ -1,10 +1,9 @@
-import io
-
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -12,21 +11,30 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.settings import STATIC_URL
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+    UserSubscription
+)
+
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import PatchModelMixin
 from .permissions import IsAuthorOrReadOnly
-from recipes.models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart,
-    Tag, UserSubscription
-)
 from .serializers import (
-    ERROR_MESSAGES, FavoriteWriteSerializer, IngredientSerializer,
-    RecipeWriteSerializer, ShoppingCartWriteSerializer,
-    SubscriptionReadSerializer, SubscriptionWriteSerializer, TagSerializer,
+    ERROR_MESSAGES,
+    FavoriteWriteSerializer,
+    IngredientSerializer,
+    RecipeWriteSerializer,
+    ShoppingCartWriteSerializer,
+    SubscriptionReadSerializer,
+    SubscriptionWriteSerializer,
+    TagSerializer,
     UserCollectionReadSerializer
 )
-
 
 User = get_user_model()
 
@@ -128,7 +136,7 @@ def shopping_cart_download(request):
         name=F('ingredient__name'),
         measurement_unit=F('ingredient__measurement_unit')
     ).annotate(amount=Sum('amount'))
-    text_file=''
+    text_file = ''
     for ingredient in sc_ingredients:
         text_file += (
             f'{ingredient["name"]} '
