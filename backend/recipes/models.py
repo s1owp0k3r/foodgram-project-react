@@ -154,6 +154,9 @@ class User(AbstractUser):
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def __str__(self):
+        return self.username
+
 
 class UserSubscription(models.Model):
     """Подписки пользователей"""

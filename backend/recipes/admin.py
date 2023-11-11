@@ -6,17 +6,13 @@ from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag, User
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = (
-        'id',
         'name',
-        'slug',
-        'color',
     )
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
-        'id',
         'name',
         'measurement_unit',
     )
@@ -57,7 +53,6 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = (
-        "pk",
         "username",
         "email",
         "first_name",
