@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag, User
+from .models import (
+    Favorite, Ingredient, Recipe, RecipeIngredient,
+    RecipeTag, ShoppingCart, Tag, User
+)
 
 
 @admin.register(Tag)
@@ -59,3 +62,21 @@ class UserAdmin(admin.ModelAdmin):
         "last_name",
     )
     search_fields = ("username", "email",)
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'recipe',
+    )
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'recipe',
+    )

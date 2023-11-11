@@ -112,7 +112,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         verbose_name = "ингредиент рецепта"
-        verbose_name_plural = "Ингредиенты рецепта"
+        verbose_name_plural = "Ингредиенты рецептов"
 
 
 class User(AbstractUser):
