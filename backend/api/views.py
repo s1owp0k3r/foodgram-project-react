@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -38,13 +37,6 @@ from .serializers import (
 )
 
 User = get_user_model()
-
-
-def error404_handler(request):
-    raise NotFound(
-        detail="Error 404, page not found",
-        code=status.HTTP_404_NOT_FOUND
-    )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
