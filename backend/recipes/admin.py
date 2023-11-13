@@ -35,6 +35,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    model = Recipe
     list_display = (
         'name',
         'author',
