@@ -1,4 +1,3 @@
-from django.conf.urls import handler404
 from django.urls import include, path, re_path
 
 from rest_framework.routers import DefaultRouter
@@ -11,7 +10,6 @@ from .views import (
     ShoppingCartCreateDeleteView,
     SubscriptionCreateDeleteView,
     TagViewSet,
-    error404_handler,
     shopping_cart_download
 )
 
@@ -43,5 +41,3 @@ urlpatterns = [
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]
-
-handler404 = error404_handler
