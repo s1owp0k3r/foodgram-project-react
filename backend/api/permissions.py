@@ -21,7 +21,6 @@ class UserProfilePermission(permissions.BasePermission):
     """Разрешение для просмотра профиля пользователя"""
 
     def has_permission(self, request, view):
-        print(request.path.split('/')[-2:])
         return (
             request.path.split('/')[-2] != 'me'
             and request.method in permissions.SAFE_METHODS

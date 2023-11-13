@@ -147,10 +147,6 @@ def shopping_cart_download(request):
         content_type='text/plain',
         status=status.HTTP_200_OK
     )
-    response['Content-Disposition'] = (
-        'attachment; '
-        'filename="shopping_cart.txt"'
-    )
     return response
 
 
