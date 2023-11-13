@@ -34,13 +34,12 @@ class Command(BaseCommand):
             for row in csv_read:
                 rows += 1
                 try:
-                    # print(row)
-                    model.objects.create(name=row[0], measurement_unit=row[1])
+                    model.objects.get_or_create(name=row[0], measurement_unit=row[1])
                     successful += 1
                 except Exception as error:
                     self.stdout.write(
                         self.style.ERROR(
-                            f'Error in row {row.get("id")}.\n'
+                            f'Error in row {rows}.\n'
                             f"Error: - {error}"
                         )
                     )
