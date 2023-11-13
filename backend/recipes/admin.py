@@ -22,11 +22,6 @@ class TagAdmin(admin.ModelAdmin):
     )
 
 
-class RecipeTagInline(admin.TabularInline):
-    model = RecipeTag
-    extra = 0
-
-
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
@@ -44,10 +39,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
     )
-    filter_horizontal = (
-        'tags',
-        'ingredients',
-    )
     list_filter = (
         'author',
         'tags'
@@ -55,7 +46,6 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = (
         'name',
     )
-    inlines = (RecipeTagInline,)
     readonly_fields = (
         'display_favorites',
     )
@@ -68,7 +58,11 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(RecipeTag)
 class RecipeTagAdmin(admin.ModelAdmin):
-    inlines = (RecipeTagInline,)
+    list_display = (
+        'id',
+        'recipe',
+        'tag',
+    )
 
 
 @admin.register(RecipeIngredient)
