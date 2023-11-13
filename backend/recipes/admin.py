@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 
 from .models import (
     Favorite,
@@ -10,6 +11,8 @@ from .models import (
     Tag,
     User
 )
+
+admin.site.unregister(Group)
 
 
 @admin.register(Tag)
@@ -25,6 +28,9 @@ class IngredientAdmin(admin.ModelAdmin):
         'name',
         'measurement_unit',
     )
+    search_fields= (
+        'name',
+    )
 
 
 @admin.register(Recipe)
@@ -33,11 +39,22 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
     )
+    filter_horizontal = (
+        'tags',
+        'ingredients',
+    )
     list_filter = (
-        'name',
         'author',
         'tags'
     )
+    search_fields= (
+        'name',
+    )
+
+    def display_favorites(self, obj):
+        return f'${obj.favorites.count()}'
+
+    display_favorites.short_description = 'Favorites count'
 
 
 @admin.register(RecipeTag)
