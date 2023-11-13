@@ -4,7 +4,6 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    error404_handler,
     FavoriteCreateDeleteView,
     IngredientViewSet,
     MySubscriptionsView,
@@ -12,6 +11,7 @@ from .views import (
     ShoppingCartCreateDeleteView,
     SubscriptionCreateDeleteView,
     TagViewSet,
+    error404_handler,
     shopping_cart_download
 )
 
