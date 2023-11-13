@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from rest_framework.authtoken.models import Token as DRFToken
 
 from .models import (
     Favorite,
@@ -13,6 +14,7 @@ from .models import (
 )
 
 admin.site.unregister(Group)
+admin.site.unregister(DRFToken)
 
 
 @admin.register(Tag)
