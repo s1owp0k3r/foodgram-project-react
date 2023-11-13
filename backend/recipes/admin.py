@@ -38,6 +38,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
+        'display_favorites',
     )
     filter_horizontal = (
         'tags',
