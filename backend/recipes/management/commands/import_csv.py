@@ -34,7 +34,9 @@ class Command(BaseCommand):
             for row in csv_read:
                 rows += 1
                 try:
-                    model.objects.get_or_create(name=row[0], measurement_unit=row[1])
+                    model.objects.get_or_create(
+                        name=row[0], measurement_unit=row[1]
+                    )
                     successful += 1
                 except Exception as error:
                     self.stdout.write(
