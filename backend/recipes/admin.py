@@ -50,16 +50,6 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = (
         'name',
     )
-    fields = (
-        'name',
-        'text',
-        'cooking_time',
-        'image',
-        'author',
-        'tags',
-        'ingredients',
-        'display_favorites',
-    )
     readonly_fields = (
         'display_favorites',
     )
