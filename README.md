@@ -60,5 +60,9 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
 ```
+- Чтобы загрузить ингредиенты, выполните команду:\
+```
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_csv --csvfile data/ingredients.csv
+```
 # Авторы проекта
 Борис Градов и команда Яндекс.Практикум
