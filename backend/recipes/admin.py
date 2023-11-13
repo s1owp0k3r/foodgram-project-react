@@ -28,7 +28,7 @@ class IngredientAdmin(admin.ModelAdmin):
         'name',
         'measurement_unit',
     )
-    search_fields= (
+    search_fields = (
         'name',
     )
 
@@ -47,7 +47,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'author',
         'tags'
     )
-    search_fields= (
+    search_fields = (
         'name',
     )
 
