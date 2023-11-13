@@ -1,15 +1,20 @@
-# Приложение Kittygram в docker-контейнерах
+# Проект Foodgram
 ## Описание проекта
-Проект Kittygram создан для публикации котиков! 
+Проект Foodgram предназначен для публикации рецептов ваших любимых блюд.\
+Вы можете добавлять свои рецепты на сайт,
+а также просматривать рецепты других пользователей и добавлять их в избранное.\
+Также у вас есть возможность добавлять рецепты в корзину покупок,
+чтобы получить список названий и количества ингредиентов, необходимых
+для приготовления отмеченных блюд.
 ## GitHub Actions workflow status
-![Main Kittygram workflow](https://github.com/s1owp0k3r/kittygram_final/actions/workflows/main.yml/badge.svg)
+![Main Foodgram workflow](https://github.com/s1owp0k3r/foodgram-project-react/actions/workflows/main.yml/badge.svg)
 ## Как развернуть приложение на удаленном сервере
 - Склонируйте репозиторий github:
 ```
-git clone git@github.com:s1owp0k3r/kittygram_final.git
+git clone git@github.com:s1owp0k3r/foodgram-project-react.git
 ```
-- Создайте в рабочей директории сервера папку kittygram
-- Скопируйте в папку kittygram файлы docker-compose.production.yml
+- Создайте в рабочей директории сервера папку foodgram
+- Скопируйте в папку foodgram файлы docker-compose.production.yml
 и .env.example, внесите в .env.example нужные значения и переименуйте в .env
 - Установите на сервер Docker Compose:
 ```
@@ -34,7 +39,8 @@ server {
     server_tokens off;
 
     location / {
-        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $http_host;
+        proxy_pass http://127.0.0.1:8000;
     }
 }
 ```
@@ -47,7 +53,7 @@ sudo ln -s /snap/bin/certbot /usr/bin/certbot
 sudo certbot --nginx
 sudo systemctl reload nginx
 ```
-- Перейдите в папку kittygram и запустите приложение через Docker Compose:
+- Перейдите в папку foodgram и запустите приложение через Docker Compose:
 ```
 sudo docker compose -f docker-compose.production.yml up -d
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate

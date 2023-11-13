@@ -38,7 +38,6 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
-        'display_favorites',
     )
     filter_horizontal = (
         'tags',
@@ -51,9 +50,22 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = (
         'name',
     )
+    fields = (
+        'name',
+        'text',
+        'cooking_time',
+        'image',
+        'author',
+        'tags',
+        'ingredients',
+        'display_favorites',
+    )
+    readonly_fields = (
+        'display_favorites',
+    )
 
     def display_favorites(self, obj):
-        return f'${obj.favorites.count()}'
+        return f'{obj.favorites.count()}'
 
     display_favorites.short_description = 'Favorites count'
 
