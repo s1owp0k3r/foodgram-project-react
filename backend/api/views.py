@@ -1,25 +1,31 @@
-from django.contrib.auth import get_user_model
+import io
+
 from django.db.models import F, Sum
-from django.db.models.query import QuerySet
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+import backend.constants as const
+from backend.settings import BASE_DIR
 from recipes.models import (
     Favorite,
     Ingredient,
     Recipe,
     RecipeIngredient,
     ShoppingCart,
-    Tag,
-    UserSubscription
+    Tag
 )
+from users.models import User, UserSubscription
 
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import PatchModelMixin
@@ -35,8 +41,6 @@ from .serializers import (
     TagSerializer,
     UserCollectionReadSerializer
 )
-
-User = get_user_model()
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -61,14 +65,21 @@ class RecipeViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Recipe.objects.all()
     serializer_class = RecipeWriteSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    def get_queryset(self):
+        return Recipe.recipes.favorite_and_shopping_cart(
+            self.request.user
+        ).select_related(
+            'author'
+        ).prefetch_related(
+            'tags'
+        ).prefetch_related(
+            'ingredients'
+        )
 
 
 class MySubscriptionsView(
@@ -126,44 +137,20 @@ class SubscriptionCreateDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-@permission_classes((IsAuthenticated,))
-def shopping_cart_download(request):
-    sc_ingredients = QuerySet(RecipeIngredient)
-    for recipe in request.user.shopping_cart.all():
-        sc_ingredients |= RecipeIngredient.objects.filter(recipe=recipe)
-    sc_ingredients = sc_ingredients.values(
-        name=F('ingredient__name'),
-        measurement_unit=F('ingredient__measurement_unit')
-    ).annotate(amount=Sum('amount'))
-    text_file = ''
-    for ingredient in sc_ingredients:
-        text_file += (
-            f'{ingredient["name"]} '
-            f'({ingredient["measurement_unit"]}) - {ingredient["amount"]}\n'
-        )
-    response = HttpResponse(
-        text_file,
-        content_type='text/plain',
-        status=status.HTTP_200_OK
-    )
-    return response
-
-
-class UserCollectionCreateDeleteView(APIView):
+class UserCollectionCreateDeleteViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin
+):
 
     permission_classes = (IsAuthenticated,)
 
-    class Meta:
-        abstract = True
-
     def post(self, request, id):
-        if not Recipe.objects.filter(pk=id).exists():
+        if not (recipe := Recipe.objects.filter(pk=id).first()):
             return Response(
                 {"errors": "Некорректный номер рецепта."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        recipe = Recipe.objects.get(pk=id)
         serializer = self._serializer(
             context={'request': request},
             data={
@@ -181,10 +168,9 @@ class UserCollectionCreateDeleteView(APIView):
     def delete(self, request, id):
         user = self.request.user
         recipe = get_object_or_404(Recipe, pk=id)
-        record = self._model.objects.filter(
+        if not (record := self._model.objects.filter(
             user=user, recipe=recipe
-        )
-        if not record:
+        )):
             return Response(
                 {"errors": ERROR_MESSAGES[self._model]},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -193,13 +179,46 @@ class UserCollectionCreateDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ShoppingCartCreateDeleteView(UserCollectionCreateDeleteView):
+class ShoppingCartCreateDeleteViewSet(
+    mixins.ListModelMixin,
+    UserCollectionCreateDeleteViewSet
+):
 
     _model = ShoppingCart
     _serializer = ShoppingCartWriteSerializer
 
+    @action(detail=False, method=['get'])
+    def shopping_cart_download(self, request):
+        sc_ingredients = RecipeIngredient.objects.filter(
+            recipe__shoppingcart__user=request.user
+        ).values(
+            name=F('ingredient__name'),
+            measurement_unit=F('ingredient__measurement_unit')
+        ).annotate(amount=Sum('amount'))
+        text = 'Список покупок:\n\n'
+        for ingredient in sc_ingredients:
+            text += (
+                f'{ingredient["name"]} '
+                f'({ingredient["measurement_unit"]}) - '
+                f'{ingredient["amount"]}\n'
+            )
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer)
+        font_dir = BASE_DIR / 'data/DejaVuSans.ttf'
+        pdfmetrics.registerFont(TTFont('DejaVuSans', font_dir))
+        p.setFont('DejaVuSans', const.PDF_FONT_SIZE)
+        textobject = p.beginText(2 * cm, 29.7 * cm - 2 * cm)
+        for line in text.splitlines(False):
+            textobject.textLine(line.rstrip())
+        p.drawText(textobject)
+        p.save()
+        buffer.seek(0)
+        return FileResponse(
+            buffer, as_attachment=True, filename='shopping-list.pdf'
+        )
 
-class FavoriteCreateDeleteView(UserCollectionCreateDeleteView):
+
+class FavoriteCreateDeleteViewSet(UserCollectionCreateDeleteViewSet):
 
     _model = Favorite
     _serializer = FavoriteWriteSerializer

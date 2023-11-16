@@ -3,14 +3,13 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    FavoriteCreateDeleteView,
+    FavoriteCreateDeleteViewSet,
     IngredientViewSet,
     MySubscriptionsView,
     RecipeViewSet,
-    ShoppingCartCreateDeleteView,
+    ShoppingCartCreateDeleteViewSet,
     SubscriptionCreateDeleteView,
-    TagViewSet,
-    shopping_cart_download
+    TagViewSet
 )
 
 router = DefaultRouter()
@@ -27,15 +26,22 @@ urlpatterns = [
         SubscriptionCreateDeleteView.as_view()
     ),
     path(
-        'recipes/download_shopping_cart/', shopping_cart_download
+        'recipes/download_shopping_cart/',
+        ShoppingCartCreateDeleteViewSet.as_view(
+            {'get': 'shopping_cart_download'}
+        )
     ),
     re_path(
         r'^recipes/(?P<id>\d+)/shopping_cart/',
-        ShoppingCartCreateDeleteView.as_view()
+        ShoppingCartCreateDeleteViewSet.as_view(
+            {'post': 'post', 'delete': 'delete'}
+        )
     ),
     re_path(
         r'^recipes/(?P<id>\d+)/favorite/',
-        FavoriteCreateDeleteView.as_view()
+        FavoriteCreateDeleteViewSet.as_view(
+            {'post': 'post', 'delete': 'delete'}
+        )
     ),
     path('', include(router.urls)),
     path('', include('djoser.urls')),

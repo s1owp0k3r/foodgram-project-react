@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 
 
-class PatchModelMixin(object):
+class PatchModelMixin:
     """Обновление данных модели (только PATCH метод)"""
 
     def partial_update(self, request, *args, **kwargs):

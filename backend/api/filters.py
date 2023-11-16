@@ -14,21 +14,21 @@ class RecipeFilter(FilterSet):
         to_field_name='slug'
     )
     is_favorited = NumberFilter(
-        field_name='favorites__id', method='filter_in'
+        field_name='is_favorited', method='filter_in'
     )
     is_in_shopping_cart = NumberFilter(
-        field_name='shopping_carts__id', method='filter_in'
+        field_name='is_in_shopping_cart', method='filter_in'
     )
+
+    class Meta:
+        model = Recipe
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def filter_in(self, queryset, name, value):
         if value == 0:
             return queryset
         lookup = '__'.join([name, 'exact'])
-        return queryset.filter(**{lookup: self.request.user.id})
-
-    class Meta:
-        model = Recipe
-        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
+        return queryset.filter(**{lookup: True})
 
 
 class IngredientFilter(FilterSet):
