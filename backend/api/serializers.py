@@ -351,6 +351,10 @@ class RecipeWriteSerializer(RecipeSerializer):
         queryset=Tag.objects.all(), many=True
     )
     ingredients = RecipeIngredientWriteSerializer(many=True)
+    name = serializers.CharField(max_length=const.NAME_MAX_LENGTH)
+    cooking_time = serializers.IntegerField(
+        min_value=const.COOKING_TIME_MIN_VALUE
+    )
 
     def validate_tags(self, value):
         if not value:
@@ -369,29 +373,32 @@ class RecipeWriteSerializer(RecipeSerializer):
             raise serializers.ValidationError(
                 'Уберите повторяющиеся ингредиенты.'
             )
-        amounts = [ingredient['amount'] for ingredient in value]
-        if min(amounts) <= 0:
+        if [
+            amount for ingredient in value if (
+                amount := ingredient['amount']
+            ) <= const.AMOUNT_MIN_VALUE
+        ]:
             raise serializers.ValidationError(
                 'Некорректное количество ингредиента.'
             )
         return value
 
     @staticmethod
-    def create_or_update(user, validated_data, instance=None):
+    def create_or_update(user, validated_data, recipe=None):
         validated_data['author'] = user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
 
-        if instance:
-            recipe = Recipe.objects.get(id=instance.id)
-            old_image_path = recipe.image.path
-            if os.path.exists(old_image_path):
-                os.remove(old_image_path)
-            Recipe.objects.filter(id=instance.id).update(**validated_data)
-            recipe.image = validated_data['image']
+        if recipe:
+            if os.path.exists(recipe.image.path):
+                os.remove(recipe.image.path)
+            new_image = validated_data.pop('image')
+            Recipe.objects.filter(id=recipe.id).update(**validated_data)
+            recipe = Recipe.objects.get(id=recipe.id)
+            recipe.image = new_image
             recipe.save()
-            RecipeIngredient.objects.filter(recipe=instance).delete()
-            RecipeTag.objects.filter(recipe=instance).delete()
+            RecipeIngredient.objects.filter(recipe=recipe).delete()
+            RecipeTag.objects.filter(recipe=recipe).delete()
         else:
             recipe = Recipe.objects.create(**validated_data)
 
@@ -421,8 +428,8 @@ class RecipeWriteSerializer(RecipeSerializer):
 
     def to_representation(self, data):
         return RecipeReadSerializer(
-            Recipe.recipes.favorite_and_shopping_cart(
-                self.context.get('request').user
+            Recipe.objects.favorite_and_shopping_cart(
+                self.context.get('request').user.id
             ).get(id=data.id),
             context=self.context
         ).data

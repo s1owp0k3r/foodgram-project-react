@@ -54,32 +54,19 @@ class Ingredient(models.Model):
 
 
 class RecipeQuerySet(models.QuerySet):
-    def favorite_and_shopping_cart(self, user):
-        if not user.is_authenticated:
-            return self.annotate(
-                is_favorited=models.Value(False),
-                is_in_shopping_cart=models.Value(False)
-            )
+    def favorite_and_shopping_cart(self, user_id=None):
         user_favorite = Favorite.objects.filter(
             recipe=models.OuterRef('pk'),
-            user=user
+            user__id=user_id
         )
         user_shopping_cart = ShoppingCart.objects.filter(
             recipe=models.OuterRef('pk'),
-            user=user
+            user__id=user_id
         )
         return self.annotate(
             is_favorited=models.Exists(user_favorite),
             is_in_shopping_cart=models.Exists(user_shopping_cart)
         )
-
-
-class RecipeManager(models.Manager):
-    def get_queryset(self):
-        return RecipeQuerySet(self.model, using=self._db)
-
-    def favorite_and_shopping_cart(self, user):
-        return self.get_queryset().favorite_and_shopping_cart(user)
 
 
 class Recipe(models.Model):
@@ -108,8 +95,7 @@ class Recipe(models.Model):
         through='RecipeTag',
         verbose_name='Теги',
     )
-    recipes = RecipeManager()
-    objects = models.Manager()
+    objects = RecipeQuerySet.as_manager()
 
     class Meta:
         verbose_name = "рецепт"

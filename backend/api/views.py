@@ -1,7 +1,7 @@
 import io
 
 from django.db.models import F, Sum
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -41,6 +41,7 @@ from .serializers import (
     TagSerializer,
     UserCollectionReadSerializer
 )
+from .utils import generate_shopping_cart
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -71,8 +72,8 @@ class RecipeViewSet(
     filterset_class = RecipeFilter
 
     def get_queryset(self):
-        return Recipe.recipes.favorite_and_shopping_cart(
-            self.request.user
+        return Recipe.objects.favorite_and_shopping_cart(
+            self.request.user.id
         ).select_related(
             'author'
         ).prefetch_related(
@@ -191,31 +192,24 @@ class ShoppingCartCreateDeleteViewSet(
     def shopping_cart_download(self, request):
         sc_ingredients = RecipeIngredient.objects.filter(
             recipe__shoppingcart__user=request.user
-        ).values(
+        ).order_by('ingredient__name').values(
             name=F('ingredient__name'),
             measurement_unit=F('ingredient__measurement_unit')
         ).annotate(amount=Sum('amount'))
-        text = 'Список покупок:\n\n'
-        for ingredient in sc_ingredients:
-            text += (
-                f'{ingredient["name"]} '
-                f'({ingredient["measurement_unit"]}) - '
-                f'{ingredient["amount"]}\n'
-            )
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer)
+        response = HttpResponse(content_type='application/pdf') 
+        response[
+            'Content-Disposition'
+        ] = 'attachment; filename="shopping-cart.pdf"'
+        p = canvas.Canvas(response)
         font_dir = BASE_DIR / 'data/DejaVuSans.ttf'
         pdfmetrics.registerFont(TTFont('DejaVuSans', font_dir))
         p.setFont('DejaVuSans', const.PDF_FONT_SIZE)
         textobject = p.beginText(2 * cm, 29.7 * cm - 2 * cm)
-        for line in text.splitlines(False):
+        for line in generate_shopping_cart(sc_ingredients).splitlines(False):
             textobject.textLine(line.rstrip())
         p.drawText(textobject)
         p.save()
-        buffer.seek(0)
-        return FileResponse(
-            buffer, as_attachment=True, filename='shopping-list.pdf'
-        )
+        return response
 
 
 class FavoriteCreateDeleteViewSet(UserCollectionCreateDeleteViewSet):
