@@ -1,5 +1,3 @@
-import io
-
 from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -196,7 +194,7 @@ class ShoppingCartCreateDeleteViewSet(
             name=F('ingredient__name'),
             measurement_unit=F('ingredient__measurement_unit')
         ).annotate(amount=Sum('amount'))
-        response = HttpResponse(content_type='application/pdf') 
+        response = HttpResponse(content_type='application/pdf')
         response[
             'Content-Disposition'
         ] = 'attachment; filename="shopping-cart.pdf"'
